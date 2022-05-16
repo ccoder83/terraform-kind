@@ -1,0 +1,23 @@
+#github issue: https://github.com/kubernetes-sigs/kind/issues/1693#issuecomment-650688970
+#ref: https://github.com/kubernetes/ingress-nginx/blob/main/hack/manifest-templates/provider/kind/values.yaml
+controller:
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxUnavailable: 1
+  hostPort:
+    enabled: true
+  terminationGracePeriodSeconds: 0
+  service:
+    type: "NodePort"
+  watchIngressWithoutClass: true
+  nodeSelector:
+    ingress-ready: "true"
+  tolerations:
+    - key: "node-role.kubernetes.io/master"
+      operator: "Equal"
+      effect: "NoSchedule"
+  publishService:
+    enabled: false
+  extraArgs:
+    publish-status-address: "localhost"

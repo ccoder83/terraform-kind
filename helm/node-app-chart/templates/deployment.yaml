@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "node-app-chart.fullname" . }}
+  labels:
+    {{- include "node-app-chart.labels" . | nindent 4 }}
+spec:
+{{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+{{- end }}
+  selector:
+    matchLabels:
+      {{- include "node-app-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+    {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "node-app-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "node-app-chart.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          env:
+          - name: PORT 
+            valueFrom:
+              configMapKeyRef:
+                  name: {{ include "node-app-chart.fullname" . }}
+                  key: port
+          - name: REDIS_HOST 
+            valueFrom:
+              configMapKeyRef:
+                  name: {{ include "node-app-chart.fullname" . }}
+                  key: redis-host                          
+          - name: REDIS_PORT  
+            valueFrom:
+              configMapKeyRef:
+                  name: {{ include "node-app-chart.fullname" . }}
+                  key: redis-port   
+          - name: REDIS_DB 
+            valueFrom:
+              configMapKeyRef:
+                  name: {{ include "node-app-chart.fullname" . }} 
+                  key: redis-db 
+          - name: "REDIS_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                name: redis
+                key: redis-password
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
