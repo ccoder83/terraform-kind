@@ -9,7 +9,7 @@
 #### Steps to build and run
 
 ##### Create Kind Registry, Build and Deploy Application:
-```sudo ./deploy.sh```
+```./deploy.sh```
 
 Once deployed, the application is exposed via an ingress, and can be accessed at:
 
