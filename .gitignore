@@ -111,3 +111,4 @@ dist
 *.tfstate.*
 
 .terraform.lock.hcl
+*.tfvars

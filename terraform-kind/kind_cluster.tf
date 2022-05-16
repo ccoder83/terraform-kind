@@ -15,7 +15,7 @@ resource "kind_cluster" "kind" {
     api_version = "kind.x-k8s.io/v1alpha4"
 
     containerd_config_patches = [
-      "[plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:${var.kind_registry_port}\"]\n  endpoint = [\"http://kind-registry:5000\"]"
+      "[plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:${var.kind_registry_port}\"]\n  endpoint = [\"http://${var.kind_registry_name}:5000\"]"
     ]
     node {
       role = "control-plane"

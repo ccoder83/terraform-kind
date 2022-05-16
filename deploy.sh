@@ -1,6 +1,23 @@
 #!/bin/bash
-REG_NAME="kind-registry"
-REG_PORT="5003"
+DEFAULT_REG_NAME="kind-registry"
+DEFAULT_REG_PORT="5003"
+
+REG_NAME=$1
+REG_PORT=$2
+
+if [ -z "$REG_NAME" ]; then
+	REG_NAME=$DEFAULT_REG_NAME
+fi
+
+if [ -z "$REG_PORT" ]; then
+	REG_PORT=$DEFAULT_REG_PORT
+fi
+
+# Create tfvars file declaring the kind registry port
+cat <<EOF > terraform-kind/vars.tfvars
+kind_registry_port="${REG_PORT}"
+kind_registry_name="${REG_NAME}"
+EOF
 
 # Create Kind local docker registry
 sh ./kind/create-local-registry.sh $REG_NAME $REG_PORT
@@ -20,8 +37,9 @@ fi
 # Deploy Kind Cluster, Ingress Nginx, Redis and the Node application
 pushd terraform-kind
 terraform init
-terraform apply -auto-approve
+terraform apply --var-file vars.tfvars -auto-approve
 popd
 
 # curl the deployed application
+sleep 5 #give nginx time to register the backend pools
 curl localhost

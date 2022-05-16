@@ -23,6 +23,12 @@ The service behind this endpoint for a given ID, increments a counter and return
 
 eg: `curl http://localhost/user/234` will return: `{"id":"234","count":1}`
 
+##### To Cleanup:
+
+This will run a terraform destroy to delete the kind cluster, and delete the local kind docker registry created as part of the deploy script:
+
+```./cleanup.sh```
+
 #### Tools Used:
 
 - Helm

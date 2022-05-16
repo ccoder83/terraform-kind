@@ -21,6 +21,11 @@ variable "kind_registry_port" {
   description = "Localhost port for the kind registry"
   default     = "5003"
 }
+variable "kind_registry_name" {
+  type        = string
+  description = "Localhost port for the kind registry"
+  default     = "kind-registry"
+}
 
 variable "ingress_nginx_helm_version" {
   type        = string

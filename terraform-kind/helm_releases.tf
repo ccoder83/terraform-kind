@@ -21,6 +21,11 @@ resource "helm_release" "nodeapp" {
   namespace        = var.app_namespace
   create_namespace = true
 
+  set {
+    name = "image.repository"
+    value = "localhost:${var.kind_registry_port}/nodeapp"
+  }
+
   depends_on = [
     helm_release.redis
   ]
