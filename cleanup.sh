@@ -13,13 +13,21 @@ if [ -z "$REG_PORT" ]; then
 	REG_PORT=$DEFAULT_REG_PORT
 fi
 
-# Deploy Kind Cluster, Ingress Nginx, Redis and the Node application
+# Destroy Kind Cluster, Ingress Nginx, Redis and the Node application
 pushd terraform-kind
 terraform apply -destroy --var-file vars.tfvars
 popd
 
-echo "Stop and remove kind registry"
-docker container stop ${REG_NAME} && docker container rm -v ${REG_NAME}
+# Remove Kind Registry
+echo "Stop and remove kind registry: ${REG_NAME}"
+echo "Are you sure?"
+read INPUT
+if [ $INPUT = 'yes' ]; then
+  docker container stop ${REG_NAME} && docker container rm -v ${REG_NAME}	
+  echo "kind registry has been deleted"
+else
+  echo "No action taken on kind registry: ${REG_NAME}"
+fi
 
 
 
