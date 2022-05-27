@@ -23,6 +23,18 @@ The service behind this endpoint for a given ID, increments a counter and return
 
 eg: `curl http://localhost/user/234` will return: `{"id":"234","count":1}`
 
+To decrease the count, call this endpoint:
+
+```curl http://localhost/user/${id}```
+
+Once the count reaches `0`, the ID is deleted from Redis
+
+To list the users, call this endpoint:
+
+```curl http://localhost/users/list```
+
+which will present a list of IDs that have been added to Redis using the `http://localhost/user/${id}` endpoint.
+
 ##### To Cleanup:
 
 This will run a terraform destroy to delete the kind cluster, and delete the local kind docker registry created as part of the deploy script:
