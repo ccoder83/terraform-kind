@@ -12,6 +12,8 @@ const client = redis.createClient({
   password: REDIS_PASSWORD
 });
 
+const UID_PREFIX = 'uid:';
+
 const app = express();
 
 app.get('/ping', (req, res) => {
@@ -30,14 +32,30 @@ app.get('/', (req, res) => {
   }
 })
 
+app.get('/users/list', (req, res) => {
+  try {
+    client.keys(`${UID_PREFIX}*`, (err, keys) => {
+      if (err) {
+        console.error(err);
+        throw err;
+      }
+
+      const ids = keys.map(key => { return key.replace(new RegExp(`^(${UID_PREFIX})`), '') })
+      res.status(200).send({idsList: ids});
+    })
+  } catch (err) {
+    res.status(500).send({ error: err.message });
+  }
+})
+
 app.get('/user/:id', (req, res) => {
   
   try {
-    const key = 'id'
     let redisId = null;
     const id = req.params.id;
+    const uid = `${UID_PREFIX}${id}`
 
-    client.get(id, (err, data) => {
+    client.get(uid, (err, data) => {
       if (err) {
         console.error(err);
         throw err;
@@ -45,22 +63,68 @@ app.get('/user/:id', (req, res) => {
 
       redisId = data;
       let redisIdJSON = null;
+      const regex = new RegExp(`^(${UID_PREFIX})`)
+
       if (redisId === null) {
-        redisIdJSON = {id, count: 1};
+
+        redisIdJSON = {uid, count: 1};
         redisId = JSON.stringify(redisIdJSON);
-        client.set(id, redisId);
-        res.status(200).send({id: redisIdJSON.id, count: redisIdJSON.count});
+        client.set(uid, redisId);
+        res.status(200).send({id: `${redisIdJSON.uid.replace(regex,'')}`, count: redisIdJSON.count});
+
       } else {
+
         redisIdJSON = JSON.parse(redisId);
         redisIdJSON.count++;
-        client.set(id, JSON.stringify(redisIdJSON));
-        res.status(200).send({id: redisIdJSON.id, count: redisIdJSON.count});
+        client.set(uid, JSON.stringify(redisIdJSON));
+        res.status(200).send({id: `${redisIdJSON.uid.replace(regex,'')}`, count: redisIdJSON.count});
+
       }
     });
   } catch (err) {
     res.status(500).send({ error: err.message });
   }
 });
+
+app.get('/user/delete/:id', (req, res) => {
+  try {
+
+    let redisId = null;
+    const id = req.params.id;
+    const uid = `${UID_PREFIX}${id}`
+
+    client.get(uid, (err, data) => {
+      if (err) {
+        console.error(err);
+        throw err;
+      }
+      redisId = data;
+      let redisIdJSON = null;
+      const regex = new RegExp(`^(${UID_PREFIX})`)
+
+      if (redisId === null) {
+        res.status(404).send({message: 'ID Not Found'})
+
+      } else {
+
+        redisIdJSON = JSON.parse(redisId);
+        redisIdJSON.count = redisIdJSON.count <= 0 ? 0 : redisIdJSON.count - 1;
+        client.set(uid, JSON.stringify(redisIdJSON));
+
+        if (redisIdJSON.count <= 0) {
+          client.del(redisIdJSON.uid);
+          res.status(200).send({message: `ID ${redisIdJSON.uid.replace(regex,'')} has been successfully deleted.`})
+          return;
+        }
+        res.status(200).send({id: `${redisIdJSON.uid.replace(regex,'')}`, count: redisIdJSON.count});
+      }
+
+      
+    })
+  } catch (err) {
+    res.status(500).send({ error: err.message });
+  }
+})
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
